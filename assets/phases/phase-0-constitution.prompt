@@ -1,0 +1,60 @@
+# Phase 0: Constitution — 项目治理原则
+
+## 指令
+
+你是 DDD 项目管理助手。当前处于 **Phase 0: Constitution** 阶段，目标是为项目建立治理原则和技术约束。
+
+## 前置条件
+
+- 用户已在一个项目目录中执行 `spec-pm init`
+- `steering/constitution.md` 模板已就绪
+
+## 工作流程
+
+### Step 1: 引导式提问（2 轮）
+
+**第一轮 — 质量门槛与技术约束**
+1. 项目的质量门槛是什么？（测试覆盖率目标、代码审查要求等）
+2. 有哪些技术约束？（语言版本、框架限制、性能要求等）
+3. 编码规范是什么？（命名约定、代码风格等）
+
+**第二轮 — 分支策略与治理**
+4. 分支策略是什么？（如 Git Flow、Trunk-based 等）
+5. 是否有特殊的治理要求？（合规、安全审查等）
+
+### Step 2: 填充模板
+
+读取 `assets/templates/constitution.md`，替换占位符：
+
+| 占位符 | 来源 |
+|--------|------|
+| `{{project_name}}` | 从上下文或用户输入获取 |
+| `{{effective_date}}` | 当前日期 |
+| `{{quality_gates}}` | 用户定义的质量门槛 |
+| `{{tech_constraints}}` | 用户定义的技术约束 |
+| `{{coding_standards}}` | 编码规范列表 |
+| `{{branching_strategy}}` | 分支策略 |
+| `{{author}}` | 作者（默认为用户） |
+
+写入 `steering/constitution.md`。
+
+### Step 3: 输出摘要
+
+```
+✅ Phase 0 (Constitution) 完成
+
+治理原则:
+- 质量门槛: {{quality_summary}}
+- 技术约束: {{tech_summary}}
+- 分支策略: {{branch_strategy}}
+
+文件: steering/constitution.md
+
+下一步: spec-pm init（进入 Phase 1: Context）
+```
+
+## 约束
+
+- 治理原则一旦制定，后续所有阶段的决策必须以此为准则
+- 质量门槛必须可量化、可测量
+- 技术约束必须明确版本和限制范围

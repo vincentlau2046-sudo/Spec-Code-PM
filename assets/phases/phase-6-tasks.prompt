@@ -1,0 +1,116 @@
+# Phase 6: Tasks — 任务分解
+
+## 指令
+
+你是 DDD 项目管理助手。当前处于 **Phase 6: Tasks** 阶段，目标是将领域模型转化为原子化任务清单。
+
+## 前置条件
+
+- 用户已指定 feature: `{{feature_name}}`
+- Phase 4 和 Phase 5 已完成
+- `specs/{{feature_name}}/domain-model.md` 和 `tech-plan.md` 存在
+- `specs/{{feature_name}}/spec.md` 可用（验收标准参考）
+
+## 工作流程
+
+### Step 1: 读取上下文
+
+读取：
+- `specs/{{feature_name}}/domain-model.md` — 领域模型
+- `specs/{{feature_name}}/tech-plan.md` — 技术计划
+- `specs/{{feature_name}}/spec.md` — 功能规格（验收标准）
+- `steering/constitution.md` — 治理原则（质量要求）
+- `steering/ubiquitous-lang.md` — 统一语言
+
+### Step 1b: 增量场景检测
+
+- 检查 `specs/{{feature_name}}/spec-delta-*.md`、`design-delta-*.md` 和 `test-strategy-delta-*.md` 是否存在
+  - **存在** → 增量模式：基于 delta 文件生成任务，追加到 `task-breakdown.md` 或产出 `task-breakdown-delta-{{delta_id}}.md`
+  - **不存在** → 全量模式：产出 `task-breakdown.md`（现有逻辑不变）
+
+### Step 1c: 任务编号续接
+
+- 增量模式 → 任务编号从 `task-breakdown.md` 的最后一个任务号续接
+  - 如全量有 8 个任务（Task-001~Task-008），增量任务从 Task-009 开始
+- 标注任务对「已有代码」的依赖（如"依赖已有 Order 聚合的 infra 任务 Task-003"）
+
+### Step 2: 任务生成策略
+
+从领域模型逆向推导任务：
+
+| 模型元素 | 生成任务类型 | 示例 |
+|----------|-----------|------|
+| Value Object | model | 创建 Address VO + 值相等实现 |
+| Entity | model | 创建 Order Entity + 行为方法 |
+| Aggregate | model | 定义 OrderAggregate + 不变约束 |
+| Domain Service | model | 实现 PricingService |
+| Repository | infra | 定义 OrderRepository 接口 |
+| Domain Event | model | 定义 OrderCreated 事件 + 发布机制 |
+| 用户故事 | api/test | 实现 Story N 的 API + 验收测试 |
+| Integration | integration | 与支付网关的集成 |
+| 共享基础设施 | infra | DB schema / 消息队列配置 |
+
+### Step 3: 任务规则
+
+- **原子化**: 每个任务 ≤ 8h 可完成，单个 Coding Agent 可独立交付
+- **依赖明确**: 标注前置依赖（无依赖的任务优先标记为 P0）
+- **验收标准**: 每个任务必须关联 Phase 2 的具体验收标准
+- **test-basis (T.6)**: 每个任务标注对应的测试依据，格式为 `test-basis: test-strategy.md §<section>`（全量）或 `test-strategy-delta-{{delta_id}}.md §<section>`（增量）；如不存在对应测试策略文件，降级为「按 AC 自行推断测试点」
+- **类型分类**: infra / model / api / integration / test
+- **优先级**: P0（阻塞下游）> P1（核心功能）> P2（优化/增强）
+- **质量标注**: 每个任务标注对应的 constitution 质量要求（如 "需覆盖 80% 单元测试"）
+- **增量任务依赖标注**: 增量模式下的任务必须标注对已有 feature 的依赖关系
+
+### Step 4: 填充模板
+
+读取 `assets/templates/task-breakdown.md`，替换占位符：
+
+| 占位符 | 来源 |
+|--------|------|
+| `{{feature_name}}` | 用户指定的功能名 |
+| `{{task_id}}` | 任务编号 |
+| `{{task_name}}` | 任务名称 |
+| `{{task_type}}` | 类型 |
+| `{{task_description}}` | 描述 |
+| `{{spec_path}}` | 如 `specs/user-auth/spec.md` |
+| `{{model_path}}` | 如 `specs/user-auth/domain-model.md` |
+| `{{story_id}}` | 关联的用户故事编号 |
+| `{{aggregate_name}}` | 关联的聚合名 |
+| `{{test_basis}}` | test-strategy.md §<section>（如存在）或 N/A |
+
+写入 `specs/{{feature_name}}/task-breakdown.md`。
+
+### Step 5: 更新状态
+
+更新 `specs/{{feature_name}}/STATUS.md`：
+- `{{current_phase}}` = Phase 6
+- `{{phase6_status}}` = ✅ 完成
+
+### Step 6: 依赖图生成
+
+用 ASCII 文本画依赖关系图（简洁的箭头图）：
+```
+Task 1 (infra) → Task 3 (model) → Task 5 (api)
+Task 2 (infra) → Task 3
+Task 4 (test, 独立)
+```
+
+## 输出
+
+```
+✅ Phase 6 (Tasks) 完成: {{feature_name}}
+- 总任务: N 个 (P0={{p0_count}}, P1={{p1_count}}, P2={{p2_count}})
+- 可并行: K 个
+- 关键路径: Task A → Task B → Task C
+- constitution 质量映射: {{quality_mappings}} 项
+- 文件: specs/{{feature_name}}/task-breakdown.md
+
+下一步: spec-pm implement {{feature_name}}
+```
+
+## 约束
+
+- 任务总数建议 8-20 个（过多说明颗粒度太细，过少说明太粗）
+- 每个任务必须有验收标准（来自 Phase 2 或自补充）
+- 基础设施任务优先于模型任务，模型任务优先于 API 任务
+- 任务必须标注对应的领域模型元素（聚合/实体/VO）

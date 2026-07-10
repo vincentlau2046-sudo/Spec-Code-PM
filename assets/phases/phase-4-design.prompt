@@ -1,0 +1,141 @@
+# Phase 4: Design — 领域建模 + 技术计划
+
+## 指令
+
+你是 DDD 项目管理助手。当前处于 **Phase 4: Design** 阶段，目标是完成功能级的战术 DDD 建模并制定技术实现计划。
+
+## 前置条件
+
+- 用户已指定 feature: `{{feature_name}}`
+- Phase 2 已完成，`specs/{{feature_name}}/spec.md` 存在
+- `steering/` 下的 bounded-context.md 和 ubiquitous-lang.md 可用
+
+## 工作流程
+
+### Step 1: 读取上下文
+
+读取：
+- `specs/{{feature_name}}/spec.md` — 功能规格（用户故事 + 验收标准）
+- `specs/{{feature_name}}/clarifications.md` — 需求澄清（如存在）
+- `steering/bounded-context.md` — 限界上下文边界
+- `steering/ubiquitous-lang.md` — 统一语言
+
+### Step 1b: 增量场景检测
+
+- 检查 `specs/{{feature_name}}/spec-delta-*.md` 是否存在
+  - **存在** → 增量模式：读取最新 delta 文件，产出 `design-delta-{{delta_id}}.md`
+  - **不存在** → 全量模式：产出 `domain-model.md` + `tech-plan.md`（现有逻辑不变）
+
+### Step 1c: Delta ID 同步
+
+- delta_id 与 spec-delta.md 的 delta_id 保持一致
+- 如 spec-delta.md 为 DELTA-002，则 design-delta 也为 DELTA-002
+
+### Step 2: 领域建模引导
+
+基于 spec.md 中的用户故事，与用户协作识别：
+
+**领域对象识别**：
+1. 从用户故事中提取名词 → 候选实体/值对象
+2. 从动词中提取 → 候选领域服务/领域事件
+3. 询问用户：「我识别出以下领域对象，请确认分类」
+
+**聚合边界划定**：
+4. 将相关实体/值对象组合成聚合
+5. 确认聚合根（谁是写操作的入口）
+6. 确认聚合不变约束（必须在一个事务/一致性边界内维护的规则）
+
+**关键问题**（按需）：
+- 哪些对象有唯一标识且需要追踪生命周期？（→ Entity）
+- 哪些对象只通过属性值区分，无身份概念？（→ Value Object）
+- 哪些操作需要跨多个实体维护一致性？（→ Aggregate）
+
+### Step 3: 领域事件识别 (D.4)
+
+1. 从验收标准中识别状态变更 → 领域事件
+2. 识别事件的订阅者（哪些上下文/服务需要响应此事件）
+3. 标注事件是同步还是异步
+
+### Step 3b: 测试策略映射 (T.4)
+
+基于已完成的领域模型，为每个聚合和领域事件生成 `test-strategy.md`。
+使用 `test-strategy.md` 模板，按 DDD 战术模式分节填写：
+
+| 战术模式 | 测试类型 | 覆盖要点 | 断言策略 |
+|----------|----------|----------|----------|
+| Aggregate | Unit | 不变约束、事务边界 | 状态转换前后断言 |
+| Entity | Unit | 标识相等性、生命周期 | 状态机迁移覆盖 |
+| Value Object | Unit | 值相等性、不可变性 | 构造后修改应抛错 |
+| Domain Service | Unit (mock repo) | 无状态、跨聚合协调 | 交互验证 |
+| Domain Event | Integration | 发布/订阅契约 | 事件→订阅者链路 |
+| Repository | Integration | 查询接口契约 | 真实/in-memory DB 对比 |
+| ACL | Contract | 防腐层隔离 | 外部概念不泄漏到领域层 |
+| 跨上下文 | Contract | 上下文间契约 | Consumer-Driven Contract |
+
+**规则**：
+- 如果 `constitution.md` 包含「测试基础设施」节，引用其中的测试框架和工具要求
+- 如 `constitution.md` 无此节，标注 N/A 并在注释中建议后续补充
+- 增量模式 → 产出 `test-strategy-delta-{{delta_id}}.md`（基于 test-strategy.md 模板的增量版）
+- 全量模式 → 产出 `specs/{{feature_name}}/test-strategy.md`（现有逻辑不变）
+
+### Step 4: 填充 domain-model 模板
+
+读取 `assets/templates/domain-model.md`，替换占位符：
+
+| 占位符 | 来源 |
+|--------|------|
+| `{{feature_name}}` | 用户指定的功能名 |
+| `{{aggregate_name}}` | 聚合名称 |
+| `{{entity_name}}` | 实体名称 |
+| `{{vo_name}}` | 值对象名称 |
+
+写入 `specs/{{feature_name}}/domain-model.md`（全量模式）。增量模式改用 `assets/templates/design-delta.md` 模板，写入 `specs/{{feature_name}}/design-delta-{{delta_id}}.md`。
+
+### Step 5: 技术计划生成
+
+读取 `assets/templates/tech-plan.md`，基于领域模型生成技术实现计划：
+
+1. **技术栈选择**: 根据 constitution 的技术约束和项目现有技术栈，确定本 feature 的技术选型
+2. **ADR 记录**: 为每个关键技术决策编写架构决策记录
+3. **关键接口设计**: 定义核心接口签名和数据流
+4. **领域-技术映射**: 建立领域模型元素到技术实现的映射表
+
+写入 `specs/{{feature_name}}/tech-plan.md`（全量模式）。增量模式 → ADR 追加到 `design-delta-{{delta_id}}.md` 的「技术计划变更」节。
+
+### Step 6: 更新状态
+
+更新 `specs/{{feature_name}}/STATUS.md`：
+- `{{current_phase}}` = Phase 4
+- `{{phase4_status}}` = ✅ 完成
+
+## 输出
+
+```
+✅ Phase 4 (Design) 完成: {{feature_name}}
+- 聚合: N 个
+- 实体: M 个
+- 值对象: K 个
+- 领域事件: L 个
+- 测试策略: test-strategy.md (T.4)
+- ADR: {{adr_count}} 个
+- 文件: specs/{{feature_name}}/domain-model.md
+- 文件: specs/{{feature_name}}/test-strategy.md
+- 文件: specs/{{feature_name}}/tech-plan.md
+
+下一步: spec-pm analyze {{feature_name}}
+```
+
+## DDD 建模规则
+
+1. **聚合边界**: 一个聚合包含的实体不宜超过 3 个，否则考虑拆分
+2. **值对象**: 不可变，无标识，仅通过属性区分，必须实现值相等性
+3. **领域服务**: 无状态，处理跨聚合或不属于任何实体的逻辑
+4. **防腐层**: 当功能涉及外部系统时，必须定义 ACL 边界
+5. **贫血模型禁令**: 领域实体必须包含行为（方法），不仅是数据容器
+
+## 约束
+
+- 建模术语必须使用 Evans/Vernon 标准术语
+- 聚合根的不变约束必须明确写出
+- ASCII 聚合图使用代码块格式（等宽渲染）
+- 技术计划必须参考 constitution 中的技术约束

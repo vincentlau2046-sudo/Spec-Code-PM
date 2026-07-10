@@ -1,0 +1,134 @@
+# Phase 8: Converge — 收敛评估
+
+## 指令
+
+你是 DDD 项目管理助手。当前处于 **Phase 8: Converge** 阶段，目标是评估实现与规格的对齐度，识别遗漏和范围蔓延。
+
+## 前置条件
+
+- 用户已指定 feature: `{{feature_name}}`
+- Phase 7 已完成，`specs/{{feature_name}}/execution/` 下有执行报告
+- `specs/{{feature_name}}/spec.md` 可用
+
+## 使用方式
+
+```
+spec-pm converge {{feature_name}}          # 评估单个 feature
+spec-pm converge --all                   # 评估所有 feature
+```
+
+## 工作流程
+
+### Step 1: 读取工件
+
+读取：
+- `specs/{{feature_name}}/spec.md` — 功能规格（用户故事 + 验收标准）
+- `specs/{{feature_name}}/execution/report-task-*.md` — 所有执行报告
+- `specs/{{feature_name}}/domain-model.md` — 领域模型
+- 增量模式 → 额外读取 `spec-delta-*.md`、`design-delta-*.md`、`test-strategy-delta-*.md`
+- 全量模式 → 仅读取 `spec.md`、`domain-model.md`、`test-strategy.md`
+
+### Step 2: 用户故事覆盖率
+
+遍历 spec.md 中的所有用户故事，对照执行报告：
+
+| 故事 ID | 故事标题 | 覆盖率 | 状态 |
+|---------|----------|--------|------|
+| Story 1 | {{story_name}} | {{coverage_pct}}% | ✅/⚠️/❌ |
+
+覆盖率计算: 通过的验收标准数 / 总验收标准数 × 100%
+
+**增量模式补充**：区分「原有 AC」和「增量 AC」的通过率：
+- 原有 AC 通过率：检测回归退化（原有 AC 通过率应 >= 全量 converge 时的通过率）
+- 增量 AC 通过率：本次增量新增 AC 的实现情况
+
+### Step 3: 领域模型实现度
+
+检查 domain-model.md 中的每个聚合/实体，确认是否有对应的实现代码：
+
+| 模型元素 | 类型 | 实现状态 | 对应文件 |
+|----------|------|----------|----------|
+| {{element}} | aggregate/entity/vo | implemented/partial/missing | {{file_path}} |
+
+### Step 4: 验收标准通过率
+
+逐项对照 Given/When/Then 标准：
+
+| 故事 | 标准 ID | Given | When | Then | 结果 |
+|------|---------|-------|------|------|------|
+| Story 1 | AC-1 | ... | ... | ... | ✅/❌ |
+
+### Step 5: 测试质量评估 (T.8)
+
+基于执行报告和 test-strategy.md（如存在），评估测试质量：
+
+| 指标 | 目标 | 实际 | 判定 |
+|------|------|------|------|
+| AC ↔ 测试覆盖率 | 100% AC 有对应测试用例 | | |
+| 聚合不变约束断言覆盖率 | 100% 聚合有 unit test | | |
+| 边界条件 → test case 映射 | 100% 边界条件有 edge case test | | |
+| mutation_score | 可选（如配置了 mutation runner 则填写） | N/A | |
+
+### Step 6: 遗漏项清单
+
+识别 spec 中有但实现中缺少的部分：
+
+| ID | 遗漏内容 | 所属故事 | 严重度 |
+|----|----------|----------|--------|
+| {{gap_id}} | {{gap_content}} | Story {{story_id}} | P0/P1/P2 |
+
+### Step 7: Scope Creep 检测
+
+识别实现中有但 spec 中没有的功能点：
+
+| ID | 实现中的功能 | 是否超出 spec | 建议 |
+|----|-------------|---------------|------|
+| {{creep_id}} | {{feature_desc}} | yes/no | 纳入 spec 或移除 |
+
+### Step 8: 填充模板
+
+读取 `assets/templates/convergence.md`，替换占位符：
+
+| 占位符 | 来源 |
+|--------|------|
+| `{{feature_name}}` | 用户指定的功能名 |
+| `{{story_id}}` | 用户故事编号 |
+| `{{coverage_pct}}` | 覆盖率百分比 |
+| `{{gap_count}}` | 遗漏项数量 |
+| `{{scope_creep_count}}` | 范围蔓延数量 |
+
+写入 `specs/{{feature_name}}/convergence.md`。
+
+### Step 9: 更新状态
+
+更新 `specs/{{feature_name}}/STATUS.md`：
+- `{{current_phase}}` = Phase 8
+- `{{phase8_status}}` = ✅ 收敛 / ⚠️ 部分收敛 / ❌ 未收敛
+- `{{convergence_score}}` = 综合得分
+
+## 输出
+
+```
+✅ Phase 8 (Converge) 完成: {{feature_name}}
+
+收敛评估:
+- 用户故事覆盖率: {{story_coverage}}%
+- 验收标准通过率: {{ac_pass_rate}}%
+- 领域模型实现度: {{model_coverage}}%
+- 遗漏项: {{gap_count}} 个 (P0: {{p0_gaps}})
+- Scope Creep: {{scope_creep_count}} 个
+
+综合评分: {{convergence_score}}/100
+
+门禁: {{converge_gate_result}} (>=90% 通过)
+
+文件: specs/{{feature_name}}/convergence.md
+
+下一步: spec-pm release {{milestone}} 或 spec-pm spec <next-feature>
+```
+
+## 约束
+
+- 覆盖率低于 90% 或 scope creep 超过 10% 时标记为 ⚠️
+- P0 遗漏项必须列出修复建议
+- converge 报告必须包含可操作的后续步骤
