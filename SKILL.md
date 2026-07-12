@@ -23,6 +23,55 @@
 
 > 每个 Phase 采用 D.x (Design/Development) / T.x (Test/Verify) 双轨制，在 Phase 内部细化为设计与验证子步骤。Phase 命令接口不变。
 
+### Phase 7→8 端到端冒烟检查（强制 Gate）
+
+> **教训来源**: InferFabric v4.1 三个 bug 全部源于模块间接口不匹配，pytest 单元覆盖 100% 仍无法捕获。
+
+Phase 7 实施完成后、Phase 8 收敛前，**必须**执行以下冒烟检查清单。
+
+#### 冒烟检查清单模板
+
+```markdown
+# Smoke Test Checklist — {Feature Name}
+
+## 1. 模块集成验证
+- [ ] 所有新/修改的模块导入成功（无 ImportError）
+- [ ] 模块间接口签名一致（参数类型、返回值格式）
+- [ ] 跨模块调用链路完整（A→B→C 无断裂）
+
+## 2. 运行时验证
+- [ ] 服务启动无错误日志
+- [ ] 核心 API 端点返回 200（非 500/502）
+- [ ] Dashboard/CLI 关键功能可交互
+
+## 3. 数据流验证
+- [ ] 关键指标数据完整（非 undefined/null）
+- [ ] 配置变更实时生效
+- [ ] 错误处理链路正常（异常不吞没）
+
+## 4. 回归检查
+- [ ] 已有功能未受破坏（手动冒烟关键路径）
+- [ ] 配置向后兼容
+- [ ] 日志/监控无异常告警
+
+**Gate 规则**: 任何一项 ❌ → 阻塞进入 Phase 8，必须修复后重新冒烟。
+```
+
+#### 执行方式
+
+| 场景 | 方法 | 负责方 |
+|------|------|--------|
+| API/服务集成 | `curl` + `python3 -c` 验证 JSON 结构 | Assistant |
+| 前端 Dashboard | 浏览器控制台 `console.log()` 检查数据流 | Assistant |
+| CLI 命令 | 直接执行 + 输出验证 | Coding Agent |
+| 配置变更 | 对比 diff + 热重载验证 | Assistant |
+
+#### 失败处理
+
+- 冒烟失败 → 在 `specs/<name>/convergence.md` 记录失败项
+- 修复后重新冒烟 → 标记 `Retest: {date}`
+- 连续 2 次冒烟失败 → 升级至 PM 审查，可能回退
+
 ```
 Phase 0 Constitution ──┐
                          ├── 全局层（制定一次，约束一切）
