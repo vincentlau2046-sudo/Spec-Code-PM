@@ -1,3 +1,8 @@
+# context-declaration:
+#   requires: [steering/constitution.md]
+#   injects: [steering/product.md, steering/ubiquitous-lang.md, steering/bounded-context.md]
+#   note: "Phase 0 已完成，constitution 为唯一前置"
+---
 # Phase 1: Context — 项目上下文建立
 
 ## 指令

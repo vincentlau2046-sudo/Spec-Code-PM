@@ -1,3 +1,8 @@
+# context-declaration:
+#   requires: [steering/product.md, steering/ubiquitous-lang.md, steering/bounded-context.md]
+#   injects: [specs/<name>/spec.md]
+#   note: "增量模式追加 spec-delta-{N}.md"
+---
 # Phase 2: Specify — 需求规格
 
 ## 指令

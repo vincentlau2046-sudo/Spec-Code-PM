@@ -1,3 +1,8 @@
+# context-declaration:
+#   requires: [specs/<name>/spec.md]
+#   injects: [specs/<name>/clarifications.md]
+#   note: "扫描 spec.md 识别模糊点"
+---
 # Phase 3: Clarify — 需求澄清
 
 ## 指令

@@ -1,3 +1,8 @@
+# context-declaration:
+#   requires: [specs/<name>/domain-model.md, specs/<name>/tech-plan.md, specs/<name>/spec.md, steering/constitution.md, steering/ubiquitous-lang.md]
+#   injects: [specs/<name>/task-breakdown.md]
+#   note: "增量模式追加 delta 上下文"
+---
 # Phase 6: Tasks — 任务分解
 
 ## 指令

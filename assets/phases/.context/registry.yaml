@@ -1,0 +1,59 @@
+# spec-code-pm context registry
+# single source of truth for per-phase artifact dependencies
+# Phase 4: Phase boundary enforcement (Layer 4)
+#
+# Format:
+#   requires: list of artifacts this Phase needs as input
+#   injects:  list of artifacts this Phase produces as output
+#   note:     optional, special handling (delta mode, compression, etc.)
+
+phase_context_map:
+  phase-0:
+    requires: []
+    injects: [steering/constitution.md]
+    note: "引导式提问，无前置工件"
+
+  phase-1:
+    requires: [steering/constitution.md]
+    injects: [steering/product.md, steering/ubiquitous-lang.md, steering/bounded-context.md]
+    note: "Phase 0 已完成，constitution 为唯一前置"
+
+  phase-2:
+    requires: [steering/product.md, steering/ubiquitous-lang.md, steering/bounded-context.md]
+    injects: [specs/<name>/spec.md]
+    note: "增量模式追加 spec-delta-{N}.md"
+
+  phase-3:
+    requires: [specs/<name>/spec.md]
+    injects: [specs/<name>/clarifications.md]
+    note: "扫描 spec.md 识别模糊点"
+
+  phase-4:
+    requires: [specs/<name>/spec.md, steering/bounded-context.md, steering/ubiquitous-lang.md]
+    injects: [specs/<name>/domain-model.md, specs/<name>/tech-plan.md, specs/<name>/test-strategy.md]
+    note: "增量模式追加 design-delta-{N}.md"
+
+  phase-5:
+    requires: [specs/<name>/spec.md, specs/<name>/domain-model.md, specs/<name>/tech-plan.md, steering/ubiquitous-lang.md, steering/constitution.md]
+    injects: [specs/<name>/analysis.md]
+    note: "增量模式追加 delta 工件读取"
+
+  phase-6:
+    requires: [specs/<name>/domain-model.md, specs/<name>/tech-plan.md, specs/<name>/spec.md, steering/constitution.md, steering/ubiquitous-lang.md]
+    injects: [specs/<name>/task-breakdown.md]
+    note: "增量模式追加 delta 上下文"
+
+  phase-7:
+    requires: [specs/<name>/task-breakdown.md, specs/<name>/spec.md, specs/<name>/domain-model.md]
+    injects: [specs/<name>/execution/report-task-{id}.md]
+    note: "压缩模式使用 spec-summary.md 替代全量 spec.md"
+
+  phase-8:
+    requires: [specs/<name>/spec.md, specs/<name>/execution/report-task-*.md, specs/<name>/domain-model.md]
+    injects: [specs/<name>/convergence.md]
+    note: "增量模式追加 delta 工件读取"
+
+  phase-9:
+    requires: [specs/STATUS.md]
+    injects: [releases/<milestone>/release-summary.md]
+    note: "聚合多 feature 的 convergence.md"

@@ -1,3 +1,8 @@
+# context-declaration:
+#   requires: [specs/<name>/task-breakdown.md, specs/<name>/spec.md, specs/<name>/domain-model.md]
+#   injects: [specs/<name>/execution/report-task-{id}.md]
+#   note: "压缩模式使用 spec-summary.md 替代全量 spec.md"
+---
 # Phase 7: Implement - 执行与验证
 
 ## 指令

@@ -1,3 +1,8 @@
+# context-declaration:
+#   requires: [specs/<name>/spec.md, specs/<name>/domain-model.md, specs/<name>/tech-plan.md, steering/ubiquitous-lang.md, steering/constitution.md]
+#   injects: [specs/<name>/analysis.md]
+#   note: "增量模式追加 delta 工件读取"
+---
 # Phase 5: Analyze — 一致性分析
 
 ## 指令

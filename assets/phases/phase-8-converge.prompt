@@ -1,3 +1,8 @@
+# context-declaration:
+#   requires: [specs/<name>/spec.md, specs/<name>/execution/report-task-*.md, specs/<name>/domain-model.md]
+#   injects: [specs/<name>/convergence.md]
+#   note: "增量模式追加 delta 工件读取"
+---
 # Phase 8: Converge — 收敛评估
 
 ## 指令

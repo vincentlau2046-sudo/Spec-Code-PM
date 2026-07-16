@@ -1,3 +1,8 @@
+# context-declaration:
+#   requires: [specs/STATUS.md]
+#   injects: [releases/<milestone>/release-summary.md]
+#   note: "聚合多 feature 的 convergence.md"
+---
 # Phase 9: Release — 里程碑发布
 
 ## 指令

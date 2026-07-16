@@ -1,3 +1,8 @@
+# context-declaration:
+#   requires: []
+#   injects: [steering/constitution.md]
+#   note: "引导式提问，无前置工件"
+---
 # Phase 0: Constitution — 项目治理原则
 
 ## 指令
