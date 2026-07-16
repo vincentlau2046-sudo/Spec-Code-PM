@@ -1,0 +1,26 @@
+# Phase 8 context manifest
+# Layer 1: Context Pruning — convergence assessment reads
+
+manifest:
+  spec:
+    source: "specs/<name>/spec.md"
+    extract:
+      - section: "用户故事"
+      - section: "验收标准"
+      - section: "Glossary"
+    max_tokens: 5000
+
+  domain_model:
+    source: "specs/<name>/domain-model.md"
+    extract:
+      - section: "Aggregates"
+      - section: "Entities"
+      - section: "聚合"
+      - section: "实体"
+    max_tokens: 3000
+
+  execution_reports:
+    source: "specs/<name>/execution/report-task-*.md"
+    extract:
+      - section: "*"  # 全部执行报告
+    max_tokens: 0  # 不截断，报告本身已精简

@@ -1,0 +1,47 @@
+# Phase 7 context manifest
+# Layer 1: Context Pruning — declarative section extraction
+# Only sections listed below are injected per task
+# Format: source file → sections to extract → max_tokens budget
+#
+# When compress=true, Phase 7 uses spec-summary.md instead of full spec.md
+# When compress=false (default), full artifacts are injected as-is
+
+manifest:
+  task_breakdown:
+    source: "specs/<name>/task-breakdown.md"
+    extract:
+      - section: "Task <CURRENT_TASK_ID>"  # 仅当前任务行
+      - section: "验收标准"
+    max_tokens: 2000
+
+  spec:
+    source: "specs/<name>/spec.md"
+    extract:
+      - section: "验收标准"
+      - section: "术语"
+      - section: "Glossary"
+    max_tokens: 3000
+    compress_fallback: "specs/<name>/.cache/spec-summary.md"
+
+  domain_model:
+    source: "specs/<name>/domain-model.md"
+    extract:
+      - section: "Aggregates"
+      - section: "Entities"
+      - section: "聚合"
+      - section: "实体"
+    max_tokens: 2000
+
+  tech_plan:
+    source: "specs/<name>/tech-plan.md"
+    extract:
+      - section: "技术选型"
+      - section: "Constraints"
+      - section: "constraints"
+    max_tokens: 1500
+
+  steering:
+    source: "steering/ubiquitous-lang.md"
+    extract:
+      - section: "*"  # 全文，通常较小
+    max_tokens: 1000
