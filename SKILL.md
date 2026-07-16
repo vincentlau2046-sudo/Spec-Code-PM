@@ -210,6 +210,9 @@ auto_analyze=true
 # 增量开发模式: true (增量) / false (全量)
 # 增量模式下 Phase 2/4/6 产出 delta 文件而非重写全量工件
 incremental=false
+# 上下文压缩: true (启用四层压缩) / false (全量注入，默认)
+# 启用后: L1 剪枝 → L2 摘要 → L3 轨迹合并 → L4 边界隔离
+compress=false
 ```
 
 ## 输出目录结构
@@ -241,6 +244,53 @@ releases/                            # Phase 9: 里程碑
 └── <milestone>/
     └── release-summary.md
 ```
+
+## 上下文压缩系统 (四层管线)
+
+> 对应 AutoWorldBuilder 的上下文管理架构，默认关闭 (`compress=false`)。
+> 通过 `.specpmrc` 的 `compress=true` 启用。
+
+### 四层架构
+
+| 层 | 名称 | 作用 | 机制 | 目标缩减 |
+|----|------|------|------|----------|
+| L4 | Phase 边界隔离 | 声明 Phase 间的 artifact 依赖 | `context-declaration` header + `registry.yaml` | N/A (元数据) |
+| L1 | 上下文剪枝 | 按需提取 section，丢弃无关内容 | `manifest-phase-N.yaml` + section parser | 40-60% |
+| L2 | 语义摘要 | 长工件压缩为结构骨架 | `spec-summary.md` (Phase 5 后生成) | ~80% |
+| L3 | 轨迹压缩 | 合并多 delta 为摘要 + 归档历史 | `spec-delta-compressed.md` + `.history/` | ~70% |
+
+### 关键路径 (Phase 7 Implement)
+
+```
+原始上下文 (~23-65K tokens)
+  │
+  ▼ L4: registry.yaml → 只注入当前 Phase 声明的 requires
+  │
+  ▼ L1: manifest → section parser 提取子集 (~10-25K)
+  │
+  ▼ L2: spec-summary.md 替代 spec.md 全文 (~3-15K)
+  │
+  ▼ L3: delta 压缩合并 (如 delta_count >= 4)
+  │
+  ▼ 最终注入: ~2-5K tokens (≈90% 缩减)
+```
+
+### 存储策略
+
+| 类型 | 位置 | Git 追踪 |
+|------|------|----------|
+| `context-declaration` headers | `assets/phases/phase-*.prompt` | ✅ |
+| `registry.yaml` | `assets/phases/.context/` | ✅ |
+| manifest | `assets/phases/.context/manifest-phase-*.yaml` | ✅ |
+| summaries | `specs/<name>/.cache/` | ❌ (.gitignore) |
+| archived deltas | `specs/<name>/.history/` | ❌ (.gitignore) |
+
+### 向后兼容
+
+- `compress=false` (默认): 行为与当前版本完全一致，全量注入
+- 无 manifest 时: 回退到全量注入
+- 摘要生成失败: 回退全量注入，记录 `[WARN]`
+- 模板文件 (`spec-delta-compressed.md`, `history-readme.md`) 在 `assets/templates/`
 
 ## 约束
 
